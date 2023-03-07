@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+
+<html>
+  
+<head>
+  <title>Welcome to Resist-o-Quiz!</title>
+  <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+<style>
+body {
+    padding: 15px;
+}
+
+
+.hidden {
+    display: none;
+}
+
+.btn {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  }
+  
+.msgdiv {
+  color: blue;
+  background-color: white;
+  font-style: bold;
+  font-size: 2em;
+}
+
+.vicdiv {
+  color: blue;
+  background-color: yellow;
+  font-style: bold;
+  font-size:  4em;
+}
+</style>
+</head>
+  
+<body>
+  <div style="text-align:center;">
+    <canvas id="canvas" width="700" height="350" style="background-color:#FFFFFF">
+    </canvas>
+    
+    <div id="victory" class="vicdiv"></div>
+    <div id="msg" class="msgdiv"></div>
+    <div id="game_status"></div>
+    What's the resistance?
+    <input type="text" id="prompt" style="border:3px solid #F7730E;">
+    <button id="answer" pys-onClick="HandleResponse" class="btn">Answer</button>
+    <br>
+    <br>
+    <br>
+    <div>Note: Answer is assumed in Ohms unless you add "kOhm" (10^3 Ohm), "MOhm" (10^6 Ohm), or "GOhm" (10^9 Ohm) to your answer.</div>
+    <a href="https://eepower.com/resistor-guide/resistor-standards-and-codes/resistor-color-code/">How to read resistor color codes</a>
+    <script>
+parent.document.getElementsByTagName('iframe')[0].scrolling="no";
+</script>
+    <py-script>
+   
+      import random, re
+      from js import document
+
+      def GetResistor(order, level, r):
+        while True:
+          c1 = random.choice(order[0:level])
+          c2 = random.choice(order[0:level])
+          c3 = random.choice(order[0:level])
+          r = (c1, c2, c3)
+          if c1 != 0 and r not in prev:
+            prev.append(r)
+            return r
+
+      order = list(range(0, 10))
+      random.shuffle(order)
+      level = 2
+      points = 0
+      prev = []
+
+      r = GetResistor(order, level, [])
+
+      def Cls():
+        canvas = document.getElementById("canvas")
+        ctx = canvas.getContext("2d")
+        background = "#FFFFFF"
+        ctx.fillStyle = background
+        ctx.fillRect(0, 0, 1000, 800)
+
+      def DrawResistor(c1, c2, c3):
+        canvas = document.getElementById("canvas")
+        ctx = canvas.getContext("2d")
+        r_color = {0:"#000000", 1:" #6F4E37", 2:"#FF0000", 3:"#FFA400",
+                4:"#FFFF00", 5:"#00FF00", 6:"#0000FF", 7:"#9933FF", 8:"#A0A0A0", 9:"#FFFFFF"}
+        background = "#FFFF99"
+        ctx.fillStyle = background
+        ctx.fillRect(20, 30, 400, 240)
+        ctx.fillStyle = r_color[c1]
+        ctx.fillRect(50, 50, 50, 200)
+        ctx.fillStyle = r_color[c2]
+        ctx.fillRect(120, 50, 50, 200)
+        ctx.fillStyle = r_color[c3]
+        ctx.fillRect(190, 50, 50, 200)
+
+      def CalcResistance(r_val):
+        return (r_val[0]*10+r_val[1])*(10**r_val[2])
+
+      def HandleResponse(*args, **kws):
+        global points
+        global level
+
+        response = Element('prompt').element.value
+        value = re.findall(r"[-+]?(?:\d*\.*\d+)", response)
+        if len(value) > 0:
+          value = float(value[0])
+        else:
+          console.log("Bad answer")
+          return
+        if "kOhm" in response:
+          value *= 10**3
+        elif "MOhm" in response:
+          value *= 10**6
+        elif "GOhm" in response:
+          value *= 10**9
+        correct = CalcResistance(r)
+        
+        if value == correct:
+          prev.append(r)
+          points += 1
+          if points % 3 == 0:
+            level += 1
+          Element("msg").write("~~~ Correct! ~~~")
+        else:
+          Element("msg").write("Incorrect :'(")
+
+
+        Element("game_status").write("Points: " + str(points) + " Level: " + str(level-1) + "/8")
+
+        if points >= 2:
+          Element("victory").write("You win!!! Feel free to keep playing...")
+          
+        Setup()
+
+      def Setup():
+        global r
+        Cls()
+        r = GetResistor(order, level, r)
+        DrawResistor(r[0], r[1], r[2])
+
+
+      def main():
+        global points, level
+        canvas = document.getElementById("canvas")
+        ctx = canvas.getContext("2d")
+        Element("game_status").write("Points: " + str(points) + " Level: " + str(level-1) + "/8")
+
+        Setup()
+       
+      main()
+   
+    </py-script>
+  </div>
+
+  
+</body>
+ 
+</html>
